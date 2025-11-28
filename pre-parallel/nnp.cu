@@ -131,6 +131,7 @@ void train_model(MODEL* model){
         // SingleBlockReduction<<<blocks,BLOCKSIZE>>>(d_losses,d_block_losses,NUM_TRAIN);
 
         // printf("Epoch %d, Loss=%.4f\n", epoch, loss/NUM_TRAIN);
+        printf("Epoch %d \n",epoch);
     }
     // Free training data and labels
     cudaFree(d_training_data);
