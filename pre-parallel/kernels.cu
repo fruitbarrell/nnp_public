@@ -4,15 +4,7 @@
 #include <cuda.h>
 #include "config.h"
 
-__device__ float relu(float x) { return x > 0 ? x : 0; }
-__device__ float drelu(float y) { return y > 0 ? 1 : 0; }
-__device__ void softmax(float *z, float *out, int len) {
-    float max = z[0];
-    for (int i=1;i<len;i++) if (z[i]>max) max=z[i];
-    float sum=0;
-    for (int i=0;i<len;i++){ out[i]=expf(z[i]-max); sum+=out[i]; }
-    for (int i=0;i<len;i++) out[i]/=sum;
-}
+
 
 /* kernels.cu
  *
@@ -24,13 +16,15 @@ __device__ void softmax(float *z, float *out, int len) {
  *     __global__ void test_kernel(){}
  */
 
-//  float h1[H1], h1a[H1];
-//             for (int j=0;j<H1;j++){
-//                 h1[j]=b1[j];
-//                 for (int i=0;i<SIZE;i++) h1[j]+=train_data[n][i]*W1[i*H1+j];
-//                 h1a[j]=relu(h1[j]);
-//             }
-
+__device__ float relu(float x) { return x > 0 ? x : 0; }
+__device__ float drelu(float y) { return y > 0 ? 1 : 0; }
+__device__ void softmax(float *z, float *out, int len) {
+    float max = z[0];
+    for (int i=1;i<len;i++) if (z[i]>max) max=z[i];
+    float sum=0;
+    for (int i=0;i<len;i++){ out[i]=expf(z[i]-max); sum+=out[i]; }
+    for (int i=0;i<len;i++) out[i]/=sum;
+}
 __global__ void SingleBlockReduction(const float *losses_in,float* losses_out,int arraySize){
   int thIdx=threadIdx.x;
   __shared__ float shArr[BLOCKSIZE*2];
