@@ -30,29 +30,29 @@
 * Returns:
 *   activated value based on ReLU function 
 */
-float relu(float x) { return x > 0 ? x : 0; }
+// float relu(float x) { return x > 0 ? x : 0; }
 
-/* Derivative of ReLU activation function
-* Arguments:
-*   y: output value from ReLU function
-* Returns:
-*   derivative value
-*/
-float drelu(float y) { return y > 0 ? 1 : 0; }
+// /* Derivative of ReLU activation function
+// * Arguments:
+// *   y: output value from ReLU function
+// * Returns:
+// *   derivative value
+// */
+// float drelu(float y) { return y > 0 ? 1 : 0; }
 
-/* Softmax activation function
-* Arguments:
-*   z: input array
-*   out: output array to store softmax results
-*   len: length of the input/output arrays
-*/ 
-void softmax(float *z, float *out, int len) {
-    float max = z[0];
-    for (int i=1;i<len;i++) if (z[i]>max) max=z[i];
-    float sum=0;
-    for (int i=0;i<len;i++){ out[i]=expf(z[i]-max); sum+=out[i]; }
-    for (int i=0;i<len;i++) out[i]/=sum;
-}
+// /* Softmax activation function
+// * Arguments:
+// *   z: input array
+// *   out: output array to store softmax results
+// *   len: length of the input/output arrays
+// */ 
+// void softmax(float *z, float *out, int len) {
+//     float max = z[0];
+//     for (int i=1;i<len;i++) if (z[i]>max) max=z[i];
+//     float sum=0;
+//     for (int i=0;i<len;i++){ out[i]=expf(z[i]-max); sum+=out[i]; }
+//     for (int i=0;i<len;i++) out[i]/=sum;
+// }
 
 /* Initialize weights with small random values
 * Arguments:
