@@ -16,7 +16,7 @@
 #define TEST_LABELS  "t10k-labels-idx1-ubyte"
 
 // MNIST dataset parameters
-#define NUM_TRAIN 6000000 // number of training samples
+#define NUM_TRAIN 1000000 // number of training samples
 #define NUM_TEST  10000 // number of test samples
 #define ROWS 28 	  // image rows
 #define COLS 28      // image columns
