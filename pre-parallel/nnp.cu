@@ -119,10 +119,11 @@ void train_model(MODEL* model){
     int blocks=(NUM_TRAIN+BLOCKSIZE-1)/BLOCKSIZE;//this one for the NN part
     int blocks2=(blocks+BLOCKSIZE-1)/BLOCKSIZE;//This one for the Reduction part
 
+    float *d_losses;
+    cudaMalloc(&d_losses,sizeof(float)*NUM_TRAIN);
+
     for (int epoch=0; epoch<EPOCHS; epoch++) {
         float loss;
-        float *d_losses;
-        cudaMalloc(&d_losses,sizeof(float)*NUM_TRAIN);
         ThreeLayerNN<<<blocks,BLOCKSIZE>>>(d_W1,d_W2,d_W3,d_b1,d_b2,d_b3,d_training_data,d_train_label,d_losses);
 
         // float *d_block_losses;
@@ -131,6 +132,24 @@ void train_model(MODEL* model){
 
         // printf("Epoch %d, Loss=%.4f\n", epoch, loss/NUM_TRAIN);
     }
+    // Free training data and labels
+    cudaFree(d_training_data);
+    cudaFree(d_train_label);
+
+    // Free weights and biases
+    cudaFree(d_W1);
+    cudaFree(d_W2);
+    cudaFree(d_W3);
+
+    cudaFree(d_b1);
+    cudaFree(d_b2);
+    cudaFree(d_b3);
+
+    // Free per-sample loss array
+    cudaFree(d_losses);
+
+    // // Free intermediate block losses if using multi-block reduction
+    // cudaFree(d_block_losses);
 }
 
 /* Save the trained model to a binary file
