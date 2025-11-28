@@ -8,3 +8,6 @@
 
 // Kernel function prototypes
 //__global__ void test_kernel();
+
+ __global__ void ThreeLayerNN(float* W1,float* W2,float* W3,float* b1,float* b2,float* b3,float* train_data,float* train_label,float* losses);
+ __global__ void SingleBlockReduction(const float *losses_in,float* losses_out,int arraySize);

@@ -75,69 +75,61 @@ void train_model(MODEL* model){
     init_weights(model->W2, H1*H2); init_weights(model->b2, H2);
     init_weights(model->W3, H2*CLASSES); init_weights(model->b3, CLASSES);
 
+    //Create device variables
+    float* d_training_data, *d_train_label;
+    float *d_W1,*d_W2,*d_W3;
+    float *d_b1,*d_b2,*d_b3;
+
+    //allocate and copy training data to GPU
+
+    float* train_data_flat = (float*)malloc(NUM_TRAIN * SIZE * sizeof(float));///
+    for (int n = 0; n < NUM_TRAIN; n++)                                         ///This flattens the data to one dim, because
+        for (int i = 0; i < SIZE; i++)                                          ///otherwise it gave me problems
+            train_data_flat[n * SIZE + i] = train_data[n][i];                 ///
+
+    cudaMalloc(&d_training_data,SIZE*NUM_TRAIN* sizeof(float));
+    cudaMemcpy(d_training_data,train_data_flat,SIZE*NUM_TRAIN* sizeof(float),cudaMemcpyHostToDevice);
+
+    float* train_label_flat = (float*)malloc(NUM_TRAIN * CLASSES * sizeof(float));///
+    for (int n = 0; n < NUM_TRAIN; n++)                                             ///This flattens the data to one dim, because
+        for (int i = 0; i < CLASSES; i++)                                          ///otherwise it gave me problems
+            train_label_flat[n * CLASSES + i] = train_label[n][i];               ///
+
+    cudaMalloc(&d_train_label,CLASSES*NUM_TRAIN* sizeof(float));
+    cudaMemcpy(d_train_label,train_label_flat,CLASSES*NUM_TRAIN* sizeof(float),cudaMemcpyHostToDevice);
+
+    //Make space for weights in GPU
+    cudaMalloc(&d_W1,SIZE*H1* sizeof(float));
+    cudaMalloc(&d_W2,H1*H2* sizeof(float));
+    cudaMalloc(&d_W3,H2*CLASSES* sizeof(float));
+    //Move weights to GPU
+    cudaMemcpy(d_W1,model->W1,SIZE*H1* sizeof(float),cudaMemcpyHostToDevice);
+    cudaMemcpy(d_W2,model->W2,H1*H2* sizeof(float),cudaMemcpyHostToDevice);
+    cudaMemcpy(d_W3,model->W3,H2*CLASSES* sizeof(float),cudaMemcpyHostToDevice);
+    //Same for bias
+    cudaMalloc(&d_b1,H1* sizeof(float));
+    cudaMalloc(&d_b2,H2* sizeof(float));
+    cudaMalloc(&d_b3,CLASSES* sizeof(float));
+    
+    cudaMemcpy(d_b1,model->b1,H1* sizeof(float),cudaMemcpyHostToDevice);
+    cudaMemcpy(d_b2,model->b2,H2* sizeof(float),cudaMemcpyHostToDevice);
+    cudaMemcpy(d_b3,model->b3,CLASSES* sizeof(float),cudaMemcpyHostToDevice);
+
+    //Create Blocks Constant
+    int blocks=(NUM_TRAIN+BLOCKSIZE-1)/BLOCKSIZE;//this one for the NN part
+    int blocks2=(blocks+BLOCKSIZE-1)/BLOCKSIZE;//This one for the Reduction part
+
     for (int epoch=0; epoch<EPOCHS; epoch++) {
-        float loss=0;
-        for (int n=0; n<NUM_TRAIN; n++) {
-            // ---------- Forward ----------
-            float h1[H1], h1a[H1];
-            for (int j=0;j<H1;j++){
-                h1[j]=model->b1[j];
-                for (int i=0;i<SIZE;i++) h1[j]+=train_data[n][i]*model->W1[i*H1+j];
-                h1a[j]=relu(h1[j]);
-            }
-            float h2[H2], h2a[H2];
-            for (int j=0;j<H2;j++){
-                h2[j]=model->b2[j];
-                for (int i=0;i<H1;i++) h2[j]+=h1a[i]*model->W2[i*H2+j];
-                h2a[j]=relu(h2[j]);
-            }
-            float out[CLASSES], outa[CLASSES];
-            for (int k=0;k<CLASSES;k++){
-                out[k]=model->b3[k];
-                for (int j=0;j<H2;j++) out[k]+=h2a[j]*model->W3[j*CLASSES+k];
-            }
-            softmax(out,outa,CLASSES);
+        float loss;
+        float *d_losses;
+        cudaMalloc(&d_losses,sizeof(float)*NUM_TRAIN);
+        ThreeLayerNN<<<blocks,BLOCKSIZE>>>(d_W1,d_W2,d_W3,d_b1,d_b2,d_b3,d_training_data,d_train_label,d_losses);
 
-            // ---------- Loss ----------
-            for (int k=0;k<CLASSES;k++)
-                loss -= train_label[n][k]*logf(outa[k]+1e-8f);
+        // float *d_block_losses;
+        // cudaMalloc(&d_block_losses,sizeof(float)*blocks);
+        // SingleBlockReduction<<<blocks,BLOCKSIZE>>>(d_losses,d_block_losses,NUM_TRAIN);
 
-            // ---------- Backprop ----------
-            float delta3[CLASSES];
-            for (int k=0;k<CLASSES;k++)
-                delta3[k] = train_label[n][k]-outa[k];
-
-            float delta2[H2];
-            for (int j=0;j<H2;j++){
-                float err=0;
-                for (int k=0;k<CLASSES;k++) err+=delta3[k]*model->W3[j*CLASSES+k];
-                delta2[j]=err*drelu(h2a[j]);
-            }
-
-            float delta1[H1];
-            for (int j=0;j<H1;j++){
-                float err=0;
-                for (int k=0;k<H2;k++) err+=delta2[k]*model->W2[j*H2+k];
-                delta1[j]=err*drelu(h1a[j]);
-            }
-
-            // ---------- Update ----------
-            for (int j=0;j<H2;j++)
-                for (int k=0;k<CLASSES;k++)
-                    model->W3[j*CLASSES+k]+=LR*delta3[k]*h2a[j];
-            for (int k=0;k<CLASSES;k++) model->b3[k]+=LR*delta3[k];
-
-            for (int j=0;j<H1;j++)
-                for (int k=0;k<H2;k++)
-                    model->W2[j*H2+k]+=LR*delta2[k]*h1a[j];
-            for (int k=0;k<H2;k++) model->b2[k]+=LR*delta2[k];
-
-            for (int i=0;i<SIZE;i++)
-                for (int j=0;j<H1;j++)
-                    model->W1[i*H1+j]+=LR*delta1[j]*train_data[n][i];
-            for (int j=0;j<H1;j++) model->b1[j]+=LR*delta1[j];
-        }
-        printf("Epoch %d, Loss=%.4f\n", epoch, loss/NUM_TRAIN);
+        // printf("Epoch %d, Loss=%.4f\n", epoch, loss/NUM_TRAIN);
     }
 }
 
@@ -186,8 +178,17 @@ void predict(float *x, MODEL* model){
     float h1[H1], h1a[H1], h2[H2], h2a[H2], out[CLASSES], outa[CLASSES];
 
     // forward pass
-    for (int j=0;j<H1;j++){ h1[j]=model->b1[j]; for(int i=0;i<SIZE;i++) h1[j]+=x[i]*model->W1[i*H1+j]; h1a[j]=relu(h1[j]); }
-    for (int j=0;j<H2;j++){ h2[j]=model->b2[j]; for(int i=0;i<H1;i++) h2[j]+=h1a[i]*model->W2[i*H2+j]; h2a[j]=relu(h2[j]); }
+    for (int j=0;j<H1;j++){ 
+        h1[j]=model->b1[j]; 
+        for(int i=0;i<SIZE;i++) 
+            h1[j]+=x[i]*model->W1[i*H1+j]; h1a[j]=relu(h1[j]);
+        }
+    for (int j=0;j<H2;j++){ 
+        h2[j]=model->b2[j]; 
+        for(int i=0;i<H1;i++) 
+        h2[j]+=h1a[i]*model->W2[i*H2+j]; 
+        h2a[j]=relu(h2[j]); 
+    }
     for (int k=0;k<CLASSES;k++){ out[k]=model->b3[k]; for(int j=0;j<H2;j++) out[k]+=h2a[j]*model->W3[j*CLASSES+k]; }
     softmax(out,outa,CLASSES);
 

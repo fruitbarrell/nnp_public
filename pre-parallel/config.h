@@ -27,6 +27,8 @@
 #define EPOCHS 5    // number of training epochs
 #define BATCH  64   // mini-batch size
 
+#define BLOCKSIZE 256 //Cuda Blocksize
+
 // Training parameters
 #define LR     0.01f // learning rate
 
