@@ -25,32 +25,37 @@ __device__ void softmax(float *z, float *out, int len) {
     for (int i=0;i<len;i++){ out[i]=expf(z[i]-max); sum+=out[i]; }
     for (int i=0;i<len;i++) out[i]/=sum;
 }
-__global__ void SingleBlockReduction(const float *losses_in,float* losses_out,int arraySize){
-  int thIdx=threadIdx.x;
-  __shared__ float shArr[BLOCKSIZE*2];
-  __shared__ int offset;
-  shArr[thIdx]=thIdx<arraySize ? losses_in[thIdx]:0;
-  if(thIdx==0) offset=BLOCKSIZE;
-  int sum=0;
-  __syncthreads();
-  while (offset < arraySize){
-    shArr[thIdx+BLOCKSIZE]=thIdx+offset<arraySize ?losses_in[thIdx+offset] : 0;
-      __syncthreads();
-    if (thIdx==0) offset -=BLOCKSIZE;
-    sum+=shArr[2*thIdx]+shArr[2*thIdx+1];
+
+ __global__ void BlockReduction(const float *losses_in,float* losses_out,int arraySize,bool single){
+    __shared__ float shArr[BLOCKSIZE];
+    int tid = threadIdx.x;
+    float sum = 0;
+    if(!single){
+        int globalIdx = blockIdx.x * BLOCKSIZE * 2 + tid; // each thead will handle two elements
+        //Each thread will try to grab to elements of the array is their reach is valid
+        if (globalIdx < arraySize)
+            sum += losses_in[globalIdx];
+        if (globalIdx + BLOCKSIZE < arraySize)
+            sum += losses_in[globalIdx + BLOCKSIZE];
+    }
+    else{
+        for (int i = tid; i < arraySize; i += BLOCKSIZE)
+        sum += losses_in[i];
+    }
+    shArr[tid] = sum;
     __syncthreads();
-    shArr[thIdx]=sum;
-  }
-  __syncthreads();
-  int arrIdx;
-  for(int stride=1;stride<BLOCKSIZE;stride<<=1){
-    arrIdx=thIdx*stride*2;
-    if(arrIdx+stride<BLOCKSIZE)
-      shArr[arrIdx]+=shArr[arrIdx+stride];
-      __syncthreads();
-  }
-  if(thIdx==0) losses_out[blockIdx.x]=shArr[0];
+
+   //reduce
+    for (int i = BLOCKSIZE / 2; i > 0; i >>= 1) {
+        if (tid < i) {
+            shArr[tid] += shArr[tid + i];
+        }
+        __syncthreads();
+    }
+    if (tid == 0)
+    losses_out[blockIdx.x] = shArr[0];
 }
+
 
  __global__ void ThreeLayerNN(float* W1,float* W2,float* W3,float* b1,float* b2,float* b3,float* train_data,float* train_label,float* losses){
    int n=blockIdx.x * blockDim.x + threadIdx.x;

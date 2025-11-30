@@ -117,21 +117,22 @@ void train_model(MODEL* model){
 
     //Create Blocks Constant
     int blocks=(NUM_TRAIN+BLOCKSIZE-1)/BLOCKSIZE;//this one for the NN part
-    int blocks2=(blocks+BLOCKSIZE-1)/BLOCKSIZE;//This one for the Reduction part
+    int redblocks=(NUM_TRAIN + BLOCKSIZE*2 - 1) / (BLOCKSIZE*2); // as in reduction blocks because they take to elements each
 
     float *d_losses;
     cudaMalloc(&d_losses,sizeof(float)*NUM_TRAIN);
+    float *d_block_losses;
+    float *d_output_loss;
+    cudaMalloc(&d_block_losses,sizeof(float)*redblocks);
+    cudaMalloc(&d_output_loss,sizeof(float));
 
     for (int epoch=0; epoch<EPOCHS; epoch++) {
         float loss;
         ThreeLayerNN<<<blocks,BLOCKSIZE>>>(d_W1,d_W2,d_W3,d_b1,d_b2,d_b3,d_training_data,d_train_label,d_losses);
-
-        // float *d_block_losses;
-        // cudaMalloc(&d_block_losses,sizeof(float)*blocks);
-        // SingleBlockReduction<<<blocks,BLOCKSIZE>>>(d_losses,d_block_losses,NUM_TRAIN);
-
-        // printf("Epoch %d, Loss=%.4f\n", epoch, loss/NUM_TRAIN);
-        printf("Epoch %d \n",epoch);
+        BlockReduction<<<redblocks,BLOCKSIZE>>>(d_losses,d_block_losses,NUM_TRAIN,false);
+        BlockReduction<<<1, BLOCKSIZE>>>(d_block_losses, d_output_loss,redblocks,true);
+        cudaMemcpy(&loss, d_output_loss, sizeof(float), cudaMemcpyDeviceToHost);
+        printf("Epoch %d, Loss=%.4f\n", epoch, loss/NUM_TRAIN);
     }
     // Free training data and labels
     cudaFree(d_training_data);
@@ -146,11 +147,11 @@ void train_model(MODEL* model){
     cudaFree(d_b2);
     cudaFree(d_b3);
 
-    // Free per-sample loss array
+    //Free the losses variables
     cudaFree(d_losses);
-
-    // // Free intermediate block losses if using multi-block reduction
-    // cudaFree(d_block_losses);
+    cudaFree(d_block_losses);
+    cudaFree(d_output_loss);
+    
 }
 
 /* Save the trained model to a binary file
