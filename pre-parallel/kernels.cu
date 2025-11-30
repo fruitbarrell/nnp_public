@@ -59,7 +59,7 @@ __device__ void softmax(float *z, float *out, int len) {
 
  __global__ void ThreeLayerNN(float* W1,float* W2,float* W3,float* b1,float* b2,float* b3,float* train_data,float* train_label,float* losses){
    int n=blockIdx.x * blockDim.x + threadIdx.x;
-   if(n==1) printf("One thread is here \n");
+   printf("Thread %d, block %d, global n=%d\n", threadIdx.x, blockIdx.x, n);
    if (n >= NUM_TRAIN) return;
     // ---------- Forward ----------
             float h1[H1], h1a[H1];
