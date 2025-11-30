@@ -121,7 +121,8 @@ __device__ void softmax(float *z, float *out, int len) {
             for (int j=0;j<H1;j++) /*b1[j]+=LR*delta1[j];*/  atomicAdd(&b1[j],LR*delta1[j]);
 
             // ---------- Loss ----------
-            losses[n] = 0.0f;
+            float loss = 0.0f;
             for (int k=0;k<CLASSES;k++)
-                losses[n] -= train_label[n*CLASSES+k]*logf(outa[k]+1e-8f);
+                loss -= train_label[n*CLASSES+k]*logf(outa[k]+1e-8f);
+            losses[n]=loss
         }
