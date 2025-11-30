@@ -118,7 +118,6 @@ void train_model(MODEL* model){
     //Create Blocks Constant
     int blocks=(NUM_TRAIN+BLOCKSIZE-1)/BLOCKSIZE;//this one for the NN part
     int redblocks=(NUM_TRAIN + BLOCKSIZE*2 - 1) / (BLOCKSIZE*2); // as in reduction blocks because they take to elements each
-    printf("blocks = %d and redblocks = %d",blocks,redblocks);
     float *d_losses;
     cudaMalloc(&d_losses,sizeof(float)*NUM_TRAIN);
     float *d_block_losses;
