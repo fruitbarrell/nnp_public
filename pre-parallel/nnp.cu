@@ -127,7 +127,7 @@ void train_model(MODEL* model){
 
     for (int epoch=0; epoch<EPOCHS; epoch++) {
         float loss;
-        ThreeLayerNN<<<blocks,BLOCKSIZE>>>(d_W1,d_W2,d_W3,d_b1,d_b2,d_b3,d_training_data,d_train_label,d_losses);
+        ThreeLayerNN<<<blocks,BLOCKSIZE>>>(d_W1,d_W2,d_W3,d_b1,d_b2,d_b3,d_training_data,d_train_label,d_losses);cudaDeviceSynchronize();
         BlockReduction<<<redblocks,BLOCKSIZE>>>(d_losses,d_block_losses,NUM_TRAIN,false);
         BlockReduction<<<1, BLOCKSIZE>>>(d_block_losses, d_output_loss,redblocks,true);
         cudaMemcpy(&loss, d_output_loss, sizeof(float), cudaMemcpyDeviceToHost);
