@@ -59,9 +59,6 @@ __device__ void softmax(float *z, float *out, int len) {
 
  __global__ void ThreeLayerNN(float* W1,float* W2,float* W3,float* b1,float* b2,float* b3,float* train_data,float* train_label,float* losses){
    int n=blockIdx.x * blockDim.x + threadIdx.x;
-   if (n==0){
-                printf("I am here");
-    }
    if (n >= NUM_TRAIN) return;
     // ---------- Forward ----------
             float h1[H1], h1a[H1];
@@ -82,11 +79,6 @@ __device__ void softmax(float *z, float *out, int len) {
                 for (int j=0;j<H2;j++) out[k]+=h2a[j]*W3[j*CLASSES+k];
             }
             softmax(out,outa,CLASSES);
-            if (n==0){
-                printf("Sample output: ");
-                for(int k=0;k<CLASSES;k++) printf("%f ", outa[k]);
-                printf("\n");
-            }
            
 
             // ---------- Backprop ----------
@@ -132,4 +124,7 @@ __device__ void softmax(float *z, float *out, int len) {
             for (int k=0;k<CLASSES;k++)
                 loss -= train_label[n*CLASSES+k]*logf(outa[k]+1e-8f);
             losses[n]=loss;
+            if(n==0){
+                losses[n]=1;
+            }
         }
