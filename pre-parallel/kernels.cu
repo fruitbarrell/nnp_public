@@ -79,7 +79,13 @@ __device__ void softmax(float *z, float *out, int len) {
                 for (int j=0;j<H2;j++) out[k]+=h2a[j]*W3[j*CLASSES+k];
             }
             softmax(out,outa,CLASSES);
-
+            if (n=0){
+                float h_out[CLASSES];
+                cudaMemcpy(h_out, outa, sizeof(float)*CLASSES, cudaMemcpyDeviceToHost);
+                printf("Sample output: ");
+                for(int k=0;k<CLASSES;k++) printf("%f ", h_out[k]);
+                printf("\n");
+            }
            
 
             // ---------- Backprop ----------
