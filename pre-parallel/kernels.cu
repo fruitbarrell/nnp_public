@@ -116,8 +116,8 @@ __device__ void softmax(float *z, float *out, int len) {
 
             for (int i=0;i<SIZE;i++)
                 for (int j=0;j<H1;j++)
-                    // W1[i*H1+j]+=LR*delta1[j]*train_data[n*CLASSES+i];
-                    atomicAdd(&W1[i*H1+j],LR*delta1[j]*train_data[n*CLASSES+i]);
+                    // W1[i*H1+j]+=LR*delta1[j]*train_data[n*SIZE+i];
+                    atomicAdd(&W1[i*H1+j],LR*delta1[j]*train_data[n*SIZE+i]);
             for (int j=0;j<H1;j++) /*b1[j]+=LR*delta1[j];*/  atomicAdd(&b1[j],LR*delta1[j]);
 
             // ---------- Loss ----------
