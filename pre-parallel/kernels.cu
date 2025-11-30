@@ -122,7 +122,7 @@ __device__ void softmax(float *z, float *out, int len) {
             // ---------- Loss ----------
             float loss = 0.0f;
             for (int k=0;k<CLASSES;k++)
-                loss -= train_label[n*CLASSES+k]*logf(outa[k]+1e-8f);
+                loss -= 1;//train_label[n*CLASSES+k]*logf(outa[k]+1e-8f);
             losses[n]=loss;
             if(n==0){
                 losses[n]=1;
