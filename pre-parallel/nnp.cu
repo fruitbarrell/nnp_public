@@ -122,7 +122,7 @@ void train_model(MODEL* model){
     cudaMalloc(&d_losses,sizeof(float)*NUM_TRAIN);
 
     //Create out vector
-    float* h_out_vector[H1];
+    float h_out_vector[H1];
     float* d_out_vector;
     cudaMalloc(&d_out_vector,sizeof(float)*H1);
     long numBlocksY=(H1+MAX_GRID_DIM-1)/MAX_GRID_DIM;
@@ -130,8 +130,9 @@ void train_model(MODEL* model){
     dim3 grid(numBlocksX,numBlocksY,1);
     VectorMultiplication<<<grid,BLOCKSIZE,2*BLOCKSIZE*sizeof(float)>>>(d_W1,d_training_data+0*SIZE,d_out_vector,SIZE,H1);
     cudaMemcpy(h_out_vector,d_out_vector,H1*sizeof(float),cudaMemcpyDeviceToHost);
+    float vector_sum=0;
     for (int i = 0; i < H1; i++) {
-    printf("%f ", h_out_vector[i]);
+    vector_sum+= h_out_vector[i];
 }
     printf("\n");
 
