@@ -134,7 +134,7 @@ void train_model(MODEL* model){
     for (int i = 0; i < H1; i++) {
     vector_sum+= h_out_vector[i];
 }
-    printf("\n");
+    printf("%.f", vector_sum);
 
 
 
