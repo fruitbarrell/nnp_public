@@ -26,51 +26,52 @@ __device__ void softmax(float *z, float *out, int len) {
     for (int i=0;i<len;i++) out[i]/=sum;
 }
 
- __global__ void BlockReduction(const float *losses_in,float* losses_out,int arraySize,bool single){
-    __shared__ float shArr[BLOCKSIZE];
-    int tid = threadIdx.x;
-    float sum = 0;
-    if(!single){
-        int globalIdx = blockIdx.x * BLOCKSIZE * 2 + tid; // each thead will handle two elements
-        //Each thread will try to grab to elements of the array is their reach is valid
-        if (globalIdx < arraySize)
-            sum += losses_in[globalIdx];
-        if (globalIdx + BLOCKSIZE < arraySize)
-            sum += losses_in[globalIdx + BLOCKSIZE];
-    }
-    else{
-        for (int i = tid; i < arraySize; i += BLOCKSIZE)
-        sum += losses_in[i];
-    }
-    shArr[tid] = sum;
+__global__ void VectorMultiplication(float* matrix,float* vector,float* out_vector,int height,int width){
+    //This will do WX
+    int thx=threadIdx.x;
+    int row=blockIdx.x + blockIdx.y * blockDim.x;
+    extern float shArr[];
+    __shared__ long offset;
+    shArr[thx]=thx<width ? matrix[thx*height+row]*vector[thx] : 0;
+    if (thx==0)
+        offset=blockDim.x;
     __syncthreads();
-
-   //reduce
-    for (int i = BLOCKSIZE / 2; i > 0; i >>= 1) {
-        if (tid < i) {
-            shArr[tid] += shArr[tid + i];
-        }
+    while (offset<width){
+        shArr[thx+blockDim.x]=thx+offset<width ? matrix[(thx+offset)*height+row] * vector[thx+offset] : 0;
         __syncthreads();
+        if (thx == 0)
+            offset += blockDim.x;
+        float sum = shArr[2*thx] + shArr[2*thx+1];
+        __syncthreads();
+        shArr[thx] = sum;
     }
-    if (tid == 0)
-    losses_out[blockIdx.x] = shArr[0];
+    __syncthreads();
+    for (int stride = 1; stride<blockDim.x; stride*=2) { //uniform
+            int arrIdx = thx*stride*2;
+            if (arrIdx+stride<blockDim.x)
+            shArr[arrIdx] += shArr[arrIdx+stride]; //sum each element w
+            __syncthreads();
+        }
+        if (thx == 0)
+            out_vector[row] = shArr[0];
 }
 
-
- __global__ void ThreeLayerNN(float* W1,float* W2,float* W3,float* b1,float* b2,float* b3,float* train_data,float* train_label,float* losses){
+__global__ void ThreeLayerNN(float* W1,float* W2,float* W3,float* b1,float* b2,float* b3,float* train_data,float* train_label,float* losses){
    int n=blockIdx.x * blockDim.x + threadIdx.x;
    if (n >= NUM_TRAIN) return;
     // ---------- Forward ----------
             float h1[H1], h1a[H1];
             for (int j=0;j<H1;j++){
                 h1[j]=b1[j];
-                for (int i=0;i<SIZE;i++) h1[j]+=train_data[n*SIZE+i]*W1[i*H1+j];
+                for (int i=0;i<SIZE;i++) 
+                    h1[j]+=train_data[n*SIZE+i]*W1[i*H1+j];
                 h1a[j]=relu(h1[j]);
             }
             float h2[H2], h2a[H2];
             for (int j=0;j<H2;j++){
                 h2[j]=b2[j];
-                for (int i=0;i<H1;i++) h2[j]+=h1a[i]*W2[i*H2+j];
+                for (int i=0;i<H1;i++) 
+                    h2[j]+=h1a[i]*W2[i*H2+j];
                 h2a[j]=relu(h2[j]);
             }
             float out[CLASSES], outa[CLASSES];

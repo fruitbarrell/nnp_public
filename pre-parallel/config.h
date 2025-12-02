@@ -26,6 +26,7 @@
 #define H2    128     // hidden layer 2
 #define EPOCHS 5    // number of training epochs
 #define BATCH  64   // mini-batch size
+#define MAX_GRID_DIM 65535
 
 #define BLOCKSIZE 256 //Cuda Blocksize
 

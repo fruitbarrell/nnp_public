@@ -117,21 +117,30 @@ void train_model(MODEL* model){
 
     //Create Blocks Constant
     int blocks=(NUM_TRAIN+BLOCKSIZE-1)/BLOCKSIZE;//this one for the NN part
-    int redblocks=(NUM_TRAIN + BLOCKSIZE*2 - 1) / (BLOCKSIZE*2); // as in reduction blocks because they take to elements each
+
     float *d_losses;
     cudaMalloc(&d_losses,sizeof(float)*NUM_TRAIN);
-    float *d_block_losses;
-    float *d_output_loss;
-    cudaMalloc(&d_block_losses,sizeof(float)*redblocks);
-    cudaMalloc(&d_output_loss,sizeof(float));
+
+    //Create out vector
+    float* h_out_vector[H1];
+    float* d_out_vector;
+    cudaMalloc(&d_out_vector,sizeof(float)*H1);
+    long numBlocksY=(H1+MAX_GRID_DIM-1)/MAX_GRID_DIM;
+    long numBlocksX=H1<MAX_GRID_DIM?H1:(H1+numBlocksY-1)/numBlocksY;
+    dim3 grid(numBlocksX,numBlocksY,1);
+    VectorMultiplication<<<grid,BLOCKSIZE,2*BLOCKSIZE*sizeof(float)>>>(d_W1,d_training_data+0*SIZE,d_out_vector,SIZE,H1);
+    cudaMemcpy(h_out_vector,d_out_vector,H1*sizeof(float),cudaMemcpyDeviceToHost);
+    for (int i = 0; i < H1; i++) {
+    printf("%f ", h_out_vector[i]);
+}
+    printf("\n");
+
+
 
     for (int epoch=0; epoch<EPOCHS; epoch++) {
-        float loss;
-        ThreeLayerNN<<<blocks,BLOCKSIZE>>>(d_W1,d_W2,d_W3,d_b1,d_b2,d_b3,d_training_data,d_train_label,d_losses);
-        BlockReduction<<<redblocks,BLOCKSIZE>>>(d_losses,d_block_losses,NUM_TRAIN,false);
-        BlockReduction<<<1, BLOCKSIZE>>>(d_block_losses, d_output_loss,redblocks,true);
-        cudaMemcpy(&loss, d_output_loss, sizeof(float), cudaMemcpyDeviceToHost);
-        printf("Epoch %d, Loss=%.4f\n", epoch, loss/NUM_TRAIN);
+        // float loss;
+        // ThreeLayerNN<<<blocks,BLOCKSIZE>>>(d_W1,d_W2,d_W3,d_b1,d_b2,d_b3,d_training_data,d_train_label,d_losses);
+
     }
     // Free training data and labels
     cudaFree(d_training_data);
@@ -148,8 +157,7 @@ void train_model(MODEL* model){
 
     //Free the losses variables
     cudaFree(d_losses);
-    cudaFree(d_block_losses);
-    cudaFree(d_output_loss);
+
     
 }
 
