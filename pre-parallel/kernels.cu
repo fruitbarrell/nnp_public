@@ -30,8 +30,6 @@ __global__ void VectorMultiplication(float* matrix,float* vector,float* out_vect
     //This will do WX
     int thx=threadIdx.x;
     int row=blockIdx.x + blockIdx.y * blockDim.x;
-    float shArr[2 * BLOCKSIZE];
-    __shared__ long offset;
     shArr[thx]=thx<width ? matrix[thx*height+row]*vector[thx] : 0;
     if (thx==0)
         offset=blockDim.x;
