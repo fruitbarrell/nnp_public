@@ -133,7 +133,8 @@ void train_model(MODEL* model){
     
     dim3 grid(numBlocksX,numBlocksY,1);
     vectorMultiply<<<grid,BLOCKSIZE,2*BLOCKSIZE*sizeof(float)>>>(d_W1,d_training_data+0*SIZE,d_out_vector,H1,SIZE);
-
+    vectorMultiply<<<grid,BLOCKSIZE,2*BLOCKSIZE*sizeof(float)>>>(d_W1,d_training_data+1*SIZE,d_out_vector,H1,SIZE);
+    
 
 
 
