@@ -135,8 +135,14 @@ void train_model(MODEL* model){
     vectorMultiply<<<grid,BLOCKSIZE,2*BLOCKSIZE*sizeof(float)>>>(d_W1,d_training_data+0*SIZE,d_out_vector,H1,SIZE);
     vectorMultiply<<<grid,BLOCKSIZE,2*BLOCKSIZE*sizeof(float)>>>(d_W1,d_training_data+1*SIZE,d_out_vector,H1,SIZE);
     vectorMultiply<<<grid,BLOCKSIZE,2*BLOCKSIZE*sizeof(float)>>>(d_W1,d_training_data+2*SIZE,d_out_vector,H1,SIZE);
-
-
+    vectorMultiply<<<grid,BLOCKSIZE,2*BLOCKSIZE*sizeof(float)>>>(d_W1,d_training_data+3*SIZE,d_out_vector,H1,SIZE);
+    vectorMultiply<<<grid,BLOCKSIZE,2*BLOCKSIZE*sizeof(float)>>>(d_W1,d_training_data+4*SIZE,d_out_vector,H1,SIZE);
+    vectorMultiply<<<grid,BLOCKSIZE,2*BLOCKSIZE*sizeof(float)>>>(d_W1,d_training_data+5*SIZE,d_out_vector,H1,SIZE);
+    vectorMultiply<<<grid,BLOCKSIZE,2*BLOCKSIZE*sizeof(float)>>>(d_W1,d_training_data+1*SIZE,d_out_vector,H1,SIZE);
+    vectorMultiply<<<grid,BLOCKSIZE,2*BLOCKSIZE*sizeof(float)>>>(d_W1,d_training_data+2*SIZE,d_out_vector,H1,SIZE);
+    vectorMultiply<<<grid,BLOCKSIZE,2*BLOCKSIZE*sizeof(float)>>>(d_W1,d_training_data+3*SIZE,d_out_vector,H1,SIZE);
+    vectorMultiply<<<grid,BLOCKSIZE,2*BLOCKSIZE*sizeof(float)>>>(d_W1,d_training_data+4*SIZE,d_out_vector,H1,SIZE);
+    vectorMultiply<<<grid,BLOCKSIZE,2*BLOCKSIZE*sizeof(float)>>>(d_W1,d_training_data+5*SIZE,d_out_vector,H1,SIZE);
 
     // for (int epoch=0; epoch<EPOCHS; epoch++) {
     //     // float loss;
