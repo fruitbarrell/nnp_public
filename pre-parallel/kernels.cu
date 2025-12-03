@@ -26,6 +26,9 @@ __device__ void softmax(float *z, float *out, int len) {
     for (int i=0;i<len;i++) out[i]/=sum;
 }
 
+__device__ float shArr[2 * BLOCKSIZE];
+__device__ long offset;
+
 __global__ void VectorMultiplication(float* matrix,float* vector,float* out_vector,int height,int width){
     //This will do WX
     int thx=threadIdx.x;

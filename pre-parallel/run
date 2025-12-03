@@ -1,5 +1,4 @@
 #!/bin/bash
-make clean
-git pull
-clear
-salloc --ntasks=1 --cpus-per-task=1 --gpus=1 --partition=gpu-v100
+vpkg_require cuda
+vpkg_require gcc
+srun ./nnp train

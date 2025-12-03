@@ -60,8 +60,7 @@
 *   size: number of weights
 */
 
-__device__ float shArr[2 * BLOCKSIZE];
-__device__ long offset;
+
 
 void init_weights(float *w, int size) {
     for (int i=0;i<size;i++)
