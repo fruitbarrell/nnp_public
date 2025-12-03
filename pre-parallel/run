@@ -1,4 +1,5 @@
 #!/bin/bash
 vpkg_require cuda
 vpkg_require gcc
+make
 srun ./nnp train
