@@ -133,20 +133,15 @@ void train_model(MODEL* model){
     
     dim3 grid(numBlocksX,numBlocksY,1);
     vectorMultiply<<<grid,BLOCKSIZE,2*BLOCKSIZE*sizeof(float)>>>(d_W1,d_training_data+0*SIZE,d_out_vector,H1,SIZE);
-    cudaMemcpy(h_out_vector,d_out_vector,H1*sizeof(float),cudaMemcpyDeviceToHost);
-    float vector_sum=0;
-    for (int i = 0; i < H1; i++) {
-    vector_sum+= h_out_vector[i];
-}
-    printf("%.f", vector_sum);
 
 
 
-    for (int epoch=0; epoch<EPOCHS; epoch++) {
-        // float loss;
-        // ThreeLayerNN<<<blocks,BLOCKSIZE>>>(d_W1,d_W2,d_W3,d_b1,d_b2,d_b3,d_training_data,d_train_label,d_losses);
 
-    }
+    // for (int epoch=0; epoch<EPOCHS; epoch++) {
+    //     // float loss;
+    //     // ThreeLayerNN<<<blocks,BLOCKSIZE>>>(d_W1,d_W2,d_W3,d_b1,d_b2,d_b3,d_training_data,d_train_label,d_losses);
+
+    // }
     // Free training data and labels
     cudaFree(d_training_data);
     cudaFree(d_train_label);
