@@ -29,34 +29,15 @@ __device__ void softmax(float *z, float *out, int len) {
 // __device__ float shArr[2 * BLOCKSIZE];
 // __device__ long offset;
 
-__global__ void VectorMultiplication(float* matrix,float* vector,float* out_vector,int height,int width){
-    //This will do WX
-    extern __shared__ float shArr[];
-    int offset=0;
-    int thx=threadIdx.x;
-    int row=blockIdx.x + blockIdx.y * blockDim.x;
-    shArr[thx]=thx<width ? matrix[thx*height+row]*vector[thx] : 0;
-    if (thx==0)
-        offset=blockDim.x;
-    __syncthreads();
-    while (offset<width){
-        shArr[thx+blockDim.x]=thx+offset<width ? matrix[(thx+offset)*height+row] * vector[thx+offset] : 0;
-        __syncthreads();
-        if (thx == 0)
-            offset += blockDim.x;
-        float sum = shArr[2*thx] + shArr[2*thx+1];
-        __syncthreads();
-        shArr[thx] = sum;
-    }
-    __syncthreads();
-    for (int stride = 1; stride<blockDim.x; stride*=2) { //uniform
-            int arrIdx = thx*stride*2;
-            if (arrIdx+stride<blockDim.x)
-            shArr[arrIdx] += shArr[arrIdx+stride]; //sum each element w
-            __syncthreads();
-        }
-        if (thx == 0)
-            out_vector[row] = shArr[0];
+__global__ void vectorMultiply(const float* W, const float* x, float* out, int height, int width) {
+    int row = blockIdx.x * blockDim.x + threadIdx.x;
+    if (row >= height) return;
+
+    float sum = 0.0f;
+    for (int col = 0; col < width; col++)
+        sum += W[row * width + col] * x[col];
+
+    out[row] = sum;
 }
 
 __global__ void ThreeLayerNN(float* W1,float* W2,float* W3,float* b1,float* b2,float* b3,float* train_data,float* train_label,float* losses){

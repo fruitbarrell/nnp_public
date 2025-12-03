@@ -132,7 +132,7 @@ void train_model(MODEL* model){
     long numBlocksX=H1<MAX_GRID_DIM?H1:(H1+numBlocksY-1)/numBlocksY;
     
     dim3 grid(numBlocksX,numBlocksY,1);
-    VectorMultiplication<<<grid,BLOCKSIZE,2*BLOCKSIZE*sizeof(float)>>>(d_W1,d_training_data+0*SIZE,d_out_vector,SIZE,H1);
+    vectorMultiply<<<grid,BLOCKSIZE,2*BLOCKSIZE*sizeof(float)>>>(d_W1,d_training_data+0*SIZE,d_out_vector,H1,SIZE);
     cudaMemcpy(h_out_vector,d_out_vector,H1*sizeof(float),cudaMemcpyDeviceToHost);
     float vector_sum=0;
     for (int i = 0; i < H1; i++) {
