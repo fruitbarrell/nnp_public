@@ -18,16 +18,49 @@
 
 __device__ float relu(float x) { return x > 0 ? x : 0; }
 __device__ float drelu(float y) { return y > 0 ? 1 : 0; }
-__device__ void softmax(float *z, float *out, int len) {
+
+__global__ void reluLayer(float* b,float* WX,float* z_out,int height){
+    int thx=blockIdx.x*blockDim.x+threadIdx.x;
+    if (thx>=height) return;
+    z_out[thx]= relu(b[thx]+WX[thx]);
+}
+__global__ void Layer(float* b,float* WX,float* z_out,int height){
+    int thx=blockIdx.x*blockDim.x+threadIdx.x;
+    if (thx>=height) return;
+    z_out[thx]= (b[thx]+WX[thx]);
+}
+
+
+__global__ void softmax(float *z, float *out, int len) {
     float max = z[0];
     for (int i=1;i<len;i++) if (z[i]>max) max=z[i];
     float sum=0;
     for (int i=0;i<len;i++){ out[i]=expf(z[i]-max); sum+=out[i]; }
     for (int i=0;i<len;i++) out[i]/=sum;
 }
+  // // ---------- Backprop ----------
+            // float delta3[CLASSES];
+            // for (int k=0;k<CLASSES;k++)
+            //     delta3[k] = train_label[n*CLASSES+k]-outa[k];
 
-// __device__ float shArr[2 * BLOCKSIZE];
-// __device__ long offset;
+            // float delta2[H2];
+            // for (int j=0;j<H2;j++){
+            //     float err=0;
+            //     for (int k=0;k<CLASSES;k++) err+=delta3[k]*W3[j*CLASSES+k];
+            //     delta2[j]=err*drelu(h2a[j]);
+            // }
+
+            // float delta1[H1];
+            // for (int j=0;j<H1;j++){
+            //     float err=0;
+            //     for (int k=0;k<H2;k++) err+=delta2[k]*W2[j*H2+k];
+            //     delta1[j]=err*drelu(h1a[j]);
+            // }
+__global__ void delta3(float* label,float* outa,float* delta3_out){
+    int thx=blockIdx.x*blockDim.x+threadIdx.x;
+    if(thx >= CLASSES) return;
+    delta3_out[thx]=label[thx]-outa[thx];
+}
 
 __global__ void vectorMultiply(const float* W, const float* x, float* out, int height, int width) {
     int row = blockIdx.x * blockDim.x  + threadIdx.x;;

@@ -118,46 +118,14 @@ void train_model(MODEL* model){
     cudaMemcpy(d_b2,model->b2,H2* sizeof(float),cudaMemcpyHostToDevice);
     cudaMemcpy(d_b3,model->b3,CLASSES* sizeof(float),cudaMemcpyHostToDevice);
 
-    //Create Blocks Constant
-    int blocks=(NUM_TRAIN+BLOCKSIZE-1)/BLOCKSIZE;//this one for the NN part
+    // //Create Blocks Constant
+    // int blocks=(NUM_TRAIN+BLOCKSIZE-1)/BLOCKSIZE;//this one for the NN part
 
-    float *d_losses;
-    cudaMalloc(&d_losses,sizeof(float)*NUM_TRAIN);
+    // float *d_losses;
+    // cudaMalloc(&d_losses,sizeof(float)*NUM_TRAIN);
 
-    int height = 3;
-    int width = 4;
-
-    // Host data
-    float h_W[12] = {
-        1,  2,  3,  4,
-        5,  6,  7,  8,
-        9, 10, 11, 12
-    };
-
-    float h_x[4] = { 1, 2, 3, 4 };
-    float h_out[3];
-
-    // Device pointers
-    float *d_W, *d_x, *d_out;
-
-    cudaMalloc(&d_W, 12 * sizeof(float));
-    cudaMalloc(&d_x, 4 * sizeof(float));
-    cudaMalloc(&d_out, 3 * sizeof(float));
-
-    cudaMemcpy(d_W, h_W, 12 * sizeof(float), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_x, h_x, 4  * sizeof(float), cudaMemcpyHostToDevice);
-
-   
-
-    vectorMultiply<<<height+4-1/4, 4>>>(
-        d_W, d_x, d_out,
-        height, width
-    );
-
-    cudaMemcpy(h_out, d_out, 3 * sizeof(float), cudaMemcpyDeviceToHost);
-
-    // Print result
-    printf("GPU out: %f %f %f\n", h_out[0], h_out[1], h_out[2]);
+    float* label_0 = train_label_flat + 0 * CLASSES;
+    printf("%s \n",label_0[1]==train_data[0][1]);
 
 
     // for (int epoch=0; epoch<EPOCHS; epoch++) {
