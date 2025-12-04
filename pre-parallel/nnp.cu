@@ -151,7 +151,8 @@ void train_model(MODEL* model){
                 // // ---------- Forward ----------
                 vectorMultiply<<<H1blocks,BLOCKSIZE>>>(d_W1,d_training_data+n*SIZE,d_W1X,H1,SIZE);
                 reluLayer<<<H1blocks,BLOCKSIZE>>>(d_b1,d_W1X,d_h1a,H1);
-
+                vectorMultiply<<<H2blocks,BLOCKSIZE>>>(d_W2,d_h1a,d_W2Z1,H2,H1);
+                reluLayer<<<H2blocks,BLOCKSIZE>>>(d_b2,d_W2Z1,d_h2a,H2);
                 // float h1[H1], h1a[H1];
                 // for (int j=0;j<H1;j++){
                 //     h1[j]=b1[j];
