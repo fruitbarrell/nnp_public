@@ -155,7 +155,7 @@ void train_model(MODEL* model){
                 reluLayer<<<H2blocks,BLOCKSIZE>>>(d_b2,d_W2Z1,d_h2a,H2);
                 vectorMultiply<<<CLASSESblocks,BLOCKSIZE>>>(d_W3,d_h2a,d_W3Z2,CLASSES,H2);
                 Layer<<<CLASSESblocks,BLOCKSIZE>>>(d_b3,d_W3Z2,d_out,CLASSES); 
-                softmax<<<1,1>>>(d_out,d_outa,CLASSES)
+                softmax<<<1,1>>>(d_out,d_outa,CLASSES);
                 // float h1[H1], h1a[H1];
                 // for (int j=0;j<H1;j++){
                 //     h1[j]=b1[j];
