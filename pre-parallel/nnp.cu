@@ -169,10 +169,10 @@ void train_model(MODEL* model){
                 delta2<<<H2blocks,BLOCKSIZE>>>(d_W3,d_delta3,d_h2a,d_delta2);
                 delta1<<<H1blocks,BLOCKSIZE>>>(d_W2,d_delta2,d_h1a,d_delta1);
 
-                // // // ---------- Update ----------
-                // //Update W3 and bias 3
-                // updateWeight<<<H2blocks,BLOCKSIZE>>>(CLASSES,d_W3,d_delta3,d_h2a,H2);
-                // updateBias<<<CLASSESblocks,BLOCKSIZE>>>(d_b3,d_delta3,CLASSES);
+                // ---------- Update ----------
+                //Update W3 and bias 3
+                updateWeight<<<H2blocks,BLOCKSIZE>>>(CLASSES,d_W3,d_delta3,d_h2a,H2);
+                updateBias<<<CLASSESblocks,BLOCKSIZE>>>(d_b3,d_delta3,CLASSES);
 
                 // //Update W2 and bias 2
                 // updateWeight<<<H1blocks,BLOCKSIZE>>>(H2,d_W2,d_delta2,d_h1a,H1);
