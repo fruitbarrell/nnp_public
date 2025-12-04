@@ -26,3 +26,4 @@ __global__ void updateWeight(int klen, float* W, float* delta, float* layera, in
 __global__ void updateBias(float* b, float* delta, int layerlen);
 
 __global__ void softmaxGPU(float *z, float *out, int len);
+ __global__ void lossGPU(float* label,float* outa,float* loss_out);

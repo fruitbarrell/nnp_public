@@ -145,9 +145,13 @@ void train_model(MODEL* model){
     int H2blocks=(H2+BLOCKSIZE-1)/BLOCKSIZE;
     int CLASSESblocks=(CLASSES+BLOCKSIZE-1)/BLOCKSIZE;
     
+    float* d_loss;
+    cudaMalloc(&d_loss,sizeof(float));
+    cudaMemset(d_loss, 0, sizeof(float));
+    float h_loss;
     for (int epoch=0; epoch<EPOCHS; epoch++) {
             for(int n=0;n<NUM_TRAIN;n++){
-                float* label_0 = train_label_flat + 0 * CLASSES;
+                
                 // // ---------- Forward ----------
                 vectorMultiply<<<H1blocks,BLOCKSIZE>>>(d_W1,d_training_data+n*SIZE,d_W1X,H1,SIZE);
                 reluLayer<<<H1blocks,BLOCKSIZE>>>(d_b1,d_W1X,d_h1a,H1);
@@ -156,28 +160,8 @@ void train_model(MODEL* model){
                 vectorMultiply<<<CLASSESblocks,BLOCKSIZE>>>(d_W3,d_h2a,d_W3Z2,CLASSES,H2);
                 Layer<<<CLASSESblocks,BLOCKSIZE>>>(d_b3,d_W3Z2,d_out,CLASSES); 
                 softmaxGPU<<<1,1>>>(d_out,d_outa,CLASSES);
-                // float h1[H1], h1a[H1];
-                // for (int j=0;j<H1;j++){
-                //     h1[j]=b1[j];
-                //     for (int i=0;i<SIZE;i++) 
-                //         h1[j]+=train_data[n*SIZE+i]*W1[i*H1+j];
-                //     h1a[j]=relu(h1[j]);
-                // }
-                // float h2[H2], h2a[H2];
-                // for (int j=0;j<H2;j++){
-                //     h2[j]=b2[j];
-                //     for (int i=0;i<H1;i++) 
-                //         h2[j]+=h1a[i]*W2[i*H2+j];
-                //     h2a[j]=relu(h2[j]);
-                // }
-                // float out[CLASSES], outa[CLASSES];
-                // for (int k=0;k<CLASSES;k++){
-                //     out[k]=b3[k];
-                //     for (int j=0;j<H2;j++) out[k]+=h2a[j]*W3[j*CLASSES+k];
-                // }
-                // softmax(out,outa,CLASSES);
-            
-
+                float* d_label_n = d_train_label + n * CLASSES;
+                lossGPU<<<1,1>>>(d_label_n,d_outa,d_loss);
                 // // ---------- Backprop ----------
                 // float delta3[CLASSES];
                 // for (int k=0;k<CLASSES;k++)
@@ -212,12 +196,10 @@ void train_model(MODEL* model){
                 //     for (int j=0;j<H1;j++)
                 //         W1[i*H1+j]+=LR*delta1[j]*train_data[n*SIZE+i];
                 // for (int j=0;j<H1;j++) b1[j]+=LR*delta1[j];
-                //   ---------- Loss ----------
-                //   float loss = 0.0f;
-                //   for (int k=0;k<CLASSES;k++)
-                //     loss -= train_label[n][k]*logf(h1a[k]+1e-8f);
+           
         }
-
+        cudaMemcpy(&h_loss, d_loss, sizeof(float), cudaMemcpyDeviceToHost);
+        printf("Epoch %d — Loss: %.6f\n", epoch, h_loss);
     }
     // Free training data and labels
     cudaFree(d_training_data);

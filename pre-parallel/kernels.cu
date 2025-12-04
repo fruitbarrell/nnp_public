@@ -16,6 +16,10 @@
  *     __global__ void test_kernel(){}
  */
 
+ __global__ void lossGPU(float* label,float* outa,float* loss_out){
+      for (int k=0;k<CLASSES;k++)
+            *loss_out -= label[k]*logf(outa[k]+1e-8f);
+ }
 __device__ float relu(float x) { return x > 0 ? x : 0; }
 __device__ float drelu(float y) { return y > 0 ? 1 : 0; }
 __global__ void softmaxGPU(float *z, float *out, int len) {
