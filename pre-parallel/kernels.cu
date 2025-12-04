@@ -77,26 +77,26 @@ __global__ void ThreeLayerNN(float* W1,float* W2,float* W3,float* b1,float* b2,f
    int n=blockIdx.x * blockDim.x + threadIdx.x;
    if (n >= NUM_TRAIN) return;
     // ---------- Forward ----------
-            float h1[H1], h1a[H1];
-            for (int j=0;j<H1;j++){
-                h1[j]=b1[j];
-                for (int i=0;i<SIZE;i++) 
-                    h1[j]+=train_data[n*SIZE+i]*W1[i*H1+j];
-                h1a[j]=relu(h1[j]);
-            }
-            float h2[H2], h2a[H2];
-            for (int j=0;j<H2;j++){
-                h2[j]=b2[j];
-                for (int i=0;i<H1;i++) 
-                    h2[j]+=h1a[i]*W2[i*H2+j];
-                h2a[j]=relu(h2[j]);
-            }
-            float out[CLASSES], outa[CLASSES];
-            for (int k=0;k<CLASSES;k++){
-                out[k]=b3[k];
-                for (int j=0;j<H2;j++) out[k]+=h2a[j]*W3[j*CLASSES+k];
-            }
-            softmax(out,outa,CLASSES);
+            // float h1[H1], h1a[H1];
+            // for (int j=0;j<H1;j++){
+            //     h1[j]=b1[j];
+            //     for (int i=0;i<SIZE;i++) 
+            //         h1[j]+=train_data[n*SIZE+i]*W1[i*H1+j];
+            //     h1a[j]=relu(h1[j]);
+            // }
+            // float h2[H2], h2a[H2];
+            // for (int j=0;j<H2;j++){
+            //     h2[j]=b2[j];
+            //     for (int i=0;i<H1;i++) 
+            //         h2[j]+=h1a[i]*W2[i*H2+j];
+            //     h2a[j]=relu(h2[j]);
+            // }
+            // float out[CLASSES], outa[CLASSES];
+            // for (int k=0;k<CLASSES;k++){
+            //     out[k]=b3[k];
+            //     for (int j=0;j<H2;j++) out[k]+=h2a[j]*W3[j*CLASSES+k];
+            // }
+            // softmax(out,outa,CLASSES);
            
 
             // ---------- Backprop ----------
