@@ -33,7 +33,7 @@ __global__ void delta1(float* W2,float* delta2,float* h1a,float* delta1_out){
     delta1_out[thx]=err*drelu(h1a[thx]);
 }
 
-
+void runDeltaTest() {
     printf("\n=== DELTA TEST ===\n");
 
     const int H1 = 4;
@@ -113,3 +113,11 @@ __global__ void delta1(float* W2,float* delta2,float* h1a,float* delta1_out){
     cudaFree(d_d1);
 
     printf("=== END DELTA TEST ===\n\n");
+}
+
+int main() {
+
+    runDeltaTest();  // <--- ADD THIS LINE
+
+    // ... your training code
+}
