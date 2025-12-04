@@ -161,6 +161,14 @@ void train_model(MODEL* model){
                 vectorMultiply<<<CLASSESblocks,BLOCKSIZE>>>(d_W3,d_h2a,d_W3Z2,CLASSES,H2);
                 Layer<<<CLASSESblocks,BLOCKSIZE>>>(d_b3,d_W3Z2,d_out,CLASSES); 
                 softmaxGPU<<<1,1>>>(d_out,d_outa,CLASSES);
+                if(n==0){
+                    float h_outa[CLASSES];
+                    cudaMemcpy(h_outa, d_outa, sizeof(float)*CLASSES, cudaMemcpyDeviceToHost);
+
+                    printf("outa: ");
+                    for(int k=0;k<CLASSES;k++) printf("%f ", h_outa[k]);
+                    printf("\n");
+                }
                 float* d_label_n = d_train_label + n * CLASSES;
                 lossGPU<<<1,1>>>(d_label_n,d_outa,d_loss);
                 // // ---------- Backprop ----------
