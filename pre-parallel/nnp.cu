@@ -175,8 +175,8 @@ void train_model(MODEL* model){
                 updateBias<<<CLASSESblocks,BLOCKSIZE>>>(d_b3,d_delta3,CLASSES);
 
                 //Update W2 and bias 2 ERROR BEGINS HERE
-                updateWeight<<<H1blocks,BLOCKSIZE>>>(H2,d_W2,d_delta2,d_h1a,H1);
-                // updateBias<<<H2blocks,BLOCKSIZE>>>(d_b2,d_delta2,H2);
+                // updateWeight<<<H1blocks,BLOCKSIZE>>>(H2,d_W2,d_delta2,d_h1a,H1);
+                updateBias<<<H2blocks,BLOCKSIZE>>>(d_b2,d_delta2,H2);
 
                 // //Update W1 and bias 1
                 // float* d_sample_n = d_training_data + n * SIZE;
