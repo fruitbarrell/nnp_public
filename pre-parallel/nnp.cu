@@ -133,16 +133,43 @@ void train_model(MODEL* model){
     
     dim3 grid(numBlocksX,numBlocksY,1);
     vectorMultiply<<<grid,BLOCKSIZE,2*BLOCKSIZE*sizeof(float)>>>(d_W1,d_training_data+0*SIZE,d_out_vector,H1,SIZE);
-    vectorMultiply<<<grid,BLOCKSIZE,2*BLOCKSIZE*sizeof(float)>>>(d_W1,d_training_data+1*SIZE,d_out_vector,H1,SIZE);
-    vectorMultiply<<<grid,BLOCKSIZE,2*BLOCKSIZE*sizeof(float)>>>(d_W1,d_training_data+2*SIZE,d_out_vector,H1,SIZE);
-    vectorMultiply<<<grid,BLOCKSIZE,2*BLOCKSIZE*sizeof(float)>>>(d_W1,d_training_data+3*SIZE,d_out_vector,H1,SIZE);
-    vectorMultiply<<<grid,BLOCKSIZE,2*BLOCKSIZE*sizeof(float)>>>(d_W1,d_training_data+4*SIZE,d_out_vector,H1,SIZE);
-    vectorMultiply<<<grid,BLOCKSIZE,2*BLOCKSIZE*sizeof(float)>>>(d_W1,d_training_data+5*SIZE,d_out_vector,H1,SIZE);
-    vectorMultiply<<<grid,BLOCKSIZE,2*BLOCKSIZE*sizeof(float)>>>(d_W1,d_training_data+1*SIZE,d_out_vector,H1,SIZE);
-    vectorMultiply<<<grid,BLOCKSIZE,2*BLOCKSIZE*sizeof(float)>>>(d_W1,d_training_data+2*SIZE,d_out_vector,H1,SIZE);
-    vectorMultiply<<<grid,BLOCKSIZE,2*BLOCKSIZE*sizeof(float)>>>(d_W1,d_training_data+3*SIZE,d_out_vector,H1,SIZE);
-    vectorMultiply<<<grid,BLOCKSIZE,2*BLOCKSIZE*sizeof(float)>>>(d_W1,d_training_data+4*SIZE,d_out_vector,H1,SIZE);
-    vectorMultiply<<<grid,BLOCKSIZE,2*BLOCKSIZE*sizeof(float)>>>(d_W1,d_training_data+5*SIZE,d_out_vector,H1,SIZE);
+    cudaMemcpy(h_out_vector,d_out_vector,H1*sizeof(float),cudaMemcpyDeviceToHost);
+    int h_vector_sum,d_vector_sum;
+    float* x=train_data[0];
+    float out[H1];
+    for(int row=0;row<H1;row){
+        float sum=0;
+           for (int col = 0; col < SIZE; col++) {
+            sum += model->W1[row* SIZE+ col] * x[col];
+        }
+        out[row]=sum;
+    }
+        // --- Compare results ---
+    float gpu_total = 0.0f;
+    float cpu_total = 0.0f;
+
+    int mismatches = 0;
+    for (int i = 0; i < H1; i++) {
+
+        float diff = fabs(out[i] - h_out_vector[i]);
+
+        gpu_total += h_out_vector[i];
+        cpu_total += out[i];
+
+        if (diff > 1e-3) {   // tolerance for floating point
+            printf("Mismatch at row %d: CPU=%f GPU=%f (diff=%f)\n",
+                i, out[i], h_out_vector[i], diff);
+            mismatches++;
+        }
+    }
+
+    printf("\nCPU total sum = %f\n", cpu_total);
+    printf("GPU total sum = %f\n", gpu_total);
+
+    if (mismatches == 0)
+        printf("All values match! ✅\n");
+    else
+        printf("Total mismatches = %d ❌\n", mismatches);
 
     // for (int epoch=0; epoch<EPOCHS; epoch++) {
     //     // float loss;
