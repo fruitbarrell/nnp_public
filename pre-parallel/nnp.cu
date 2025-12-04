@@ -179,7 +179,7 @@ void train_model(MODEL* model){
                 updateBias<<<H2blocks,BLOCKSIZE>>>(d_b2,d_delta2,H2);
 
                 //Update W1 and bias 1
-                float* d_sample_n = d_train_data + n * SIZE;
+                float* d_sample_n = d_training_data + n * SIZE;
                 updateWeight<<<(SIZE+BLOCKSIZE-1)/BLOCKSIZE,BLOCKSIZE>>>(H1,d_W1,d_delta1,d_sample_n,SIZE);
                 updateBias<<<H1blocks,BLOCKSIZE>>>(d_b1,d_delta1,H1);
 
