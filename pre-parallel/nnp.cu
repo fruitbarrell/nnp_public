@@ -46,13 +46,13 @@
 // *   out: output array to store softmax results
 // *   len: length of the input/output arrays
 // */ 
-// void softmax(float *z, float *out, int len) {
-//     float max = z[0];
-//     for (int i=1;i<len;i++) if (z[i]>max) max=z[i];
-//     float sum=0;
-//     for (int i=0;i<len;i++){ out[i]=expf(z[i]-max); sum+=out[i]; }
-//     for (int i=0;i<len;i++) out[i]/=sum;
-// }
+void softmax(float *z, float *out, int len) {
+    float max = z[0];
+    for (int i=1;i<len;i++) if (z[i]>max) max=z[i];
+    float sum=0;
+    for (int i=0;i<len;i++){ out[i]=expf(z[i]-max); sum+=out[i]; }
+    for (int i=0;i<len;i++) out[i]/=sum;
+}
 
 /* Initialize weights with small random values
 * Arguments:
@@ -124,7 +124,7 @@ void train_model(MODEL* model){
     //More variables to allocate in the gpu
     float* d_h1,*d_h1a,*d_h2,*d_h2a,*d_out,*d_outa;
     float* d_delta1,*d_delta2,*d_delta3;
-    float* d_W1X,*d_W2Z1,*d_W3Z3;
+    float* d_W1X,*d_W2Z1,*d_W3Z2;
 
     cudaMalloc(&d_h1,sizeof(float)*H1);   
     cudaMalloc(&d_h1a,sizeof(float)*H1);   
@@ -139,7 +139,7 @@ void train_model(MODEL* model){
 
     cudaMalloc(&d_W1X,sizeof(float)*H1);
     cudaMalloc(&d_W2Z1,sizeof(float)*H2);
-    cudaMalloc(&d_W3Z3,sizeof(float)*CLASSES); 
+    cudaMalloc(&d_W3Z2,sizeof(float)*CLASSES); 
 
     int H1blocks=(H1+BLOCKSIZE-1)/BLOCKSIZE;
     int H2blocks=(H2+BLOCKSIZE-1)/BLOCKSIZE;
@@ -153,6 +153,9 @@ void train_model(MODEL* model){
                 reluLayer<<<H1blocks,BLOCKSIZE>>>(d_b1,d_W1X,d_h1a,H1);
                 vectorMultiply<<<H2blocks,BLOCKSIZE>>>(d_W2,d_h1a,d_W2Z1,H2,H1);
                 reluLayer<<<H2blocks,BLOCKSIZE>>>(d_b2,d_W2Z1,d_h2a,H2);
+                vectorMultiply<<<CLASSESblocks,BLOCKSIZE>>>(d_W3,d_h2a,d_W3Z2,CLASSES,H2);
+                Layer<<<CLASSESblocks,BLOCKSIZE>>>(d_b3,d_W3Z2,d_out,CLASSES); 
+                softmax<<<1,1>>>(d_out,d_outa,CLASSES)
                 // float h1[H1], h1a[H1];
                 // for (int j=0;j<H1;j++){
                 //     h1[j]=b1[j];
@@ -244,7 +247,7 @@ void train_model(MODEL* model){
 
     cudaFree(d_W1X);
     cudaFree(d_W2Z1);
-    cudaFree(d_W3Z3);
+    cudaFree(d_W3Z2);
    
 
     
