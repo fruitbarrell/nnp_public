@@ -18,7 +18,7 @@
 
 __device__ float relu(float x) { return x > 0 ? x : 0; }
 __device__ float drelu(float y) { return y > 0 ? 1 : 0; }
-__global__ void softmax(float *z, float *out, int len) {
+__global__ void softmaxGPU(float *z, float *out, int len) {
     float max = z[0];
     for (int i=1;i<len;i++) if (z[i]>max) max=z[i];
     float sum=0;
