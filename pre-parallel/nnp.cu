@@ -146,8 +146,8 @@ void train_model(MODEL* model){
     cudaFree(d_b2);
     cudaFree(d_b3);
 
-    //Free the losses variables
-    cudaFree(d_losses);
+    // //Free the losses variables
+    // cudaFree(d_losses);
 
     
 }
