@@ -164,10 +164,10 @@ void train_model(MODEL* model){
                 // ---------- Loss ----------
                 float* d_label_n = d_train_label + n * CLASSES;
                 lossGPU<<<1,1>>>(d_label_n,d_outa,d_loss);
-                // // ---------- Backprop ----------
-                // delta3<<<CLASSESblocks,BLOCKSIZE>>>(d_label_n,d_outa,d_delta3);
-                // delta2<<<H2blocks,BLOCKSIZE>>>(d_W3,d_delta3,d_h2a,d_delta2);
-                // delta1<<<H1blocks,BLOCKSIZE>>>(d_W2,d_delta2,d_h1a,d_delta1);
+                // ---------- Backprop ----------
+                delta3<<<CLASSESblocks,BLOCKSIZE>>>(d_label_n,d_outa,d_delta3);
+                delta2<<<H2blocks,BLOCKSIZE>>>(d_W3,d_delta3,d_h2a,d_delta2);
+                delta1<<<H1blocks,BLOCKSIZE>>>(d_W2,d_delta2,d_h1a,d_delta1);
 
                 // // // ---------- Update ----------
                 // //Update W3 and bias 3
