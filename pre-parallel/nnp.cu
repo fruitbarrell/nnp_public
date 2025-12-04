@@ -150,6 +150,7 @@ void train_model(MODEL* model){
     cudaMemset(d_loss, 0, sizeof(float));
     float h_loss;
     for (int epoch=0; epoch<EPOCHS; epoch++) {
+        cudaMemset(d_loss, 0, sizeof(float));
             for(int n=0;n<NUM_TRAIN;n++){
                 
                 // // ---------- Forward ----------
