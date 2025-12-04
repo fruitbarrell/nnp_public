@@ -124,52 +124,41 @@ void train_model(MODEL* model){
     float *d_losses;
     cudaMalloc(&d_losses,sizeof(float)*NUM_TRAIN);
 
-    //Create out vector
-    float h_out_vector[H1];
-    float* d_out_vector;
-    cudaMalloc(&d_out_vector,sizeof(float)*H1);
-    long numBlocksY=(H1+MAX_GRID_DIM-1)/MAX_GRID_DIM;
-    long numBlocksX=H1<MAX_GRID_DIM?H1:(H1+numBlocksY-1)/numBlocksY;
-    
-    dim3 grid(numBlocksX,numBlocksY,1);
-    vectorMultiply<<<grid,BLOCKSIZE,2*BLOCKSIZE*sizeof(float)>>>(d_W1,d_training_data+0*SIZE,d_out_vector,H1,SIZE);
-    cudaMemcpy(h_out_vector,d_out_vector,H1*sizeof(float),cudaMemcpyDeviceToHost);
-    int h_vector_sum,d_vector_sum;
-    float* x=train_data[0];
-    float out[H1];
-    for(int row=0;row<H1;row){
-        float sum=0;
-           for (int col = 0; col < SIZE; col++) {
-            sum += model->W1[row* SIZE+ col] * x[col];
-        }
-        out[row]=sum;
-    }
-        // --- Compare results ---
-    float gpu_total = 0.0f;
-    float cpu_total = 0.0f;
+    int height = 3;
+    int width = 4;
 
-    int mismatches = 0;
-    for (int i = 0; i < H1; i++) {
+    // Host data
+    float h_W[12] = {
+        1,  2,  3,  4,
+        5,  6,  7,  8,
+        9, 10, 11, 12
+    };
 
-        float diff = fabs(out[i] - h_out_vector[i]);
+    float h_x[4] = { 1, 2, 3, 4 };
+    float h_out[3];
 
-        gpu_total += h_out_vector[i];
-        cpu_total += out[i];
+    // Device pointers
+    float *d_W, *d_x, *d_out;
 
-        if (diff > 1e-3) {   // tolerance for floating point
-            printf("Mismatch at row %d: CPU=%f GPU=%f (diff=%f)\n",
-                i, out[i], h_out_vector[i], diff);
-            mismatches++;
-        }
-    }
+    cudaMalloc(&d_W, 12 * sizeof(float));
+    cudaMalloc(&d_x, 4 * sizeof(float));
+    cudaMalloc(&d_out, 3 * sizeof(float));
 
-    printf("\nCPU total sum = %f\n", cpu_total);
-    printf("GPU total sum = %f\n", gpu_total);
+    cudaMemcpy(d_W, h_W, 12 * sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_x, h_x, 4  * sizeof(float), cudaMemcpyHostToDevice);
 
-    if (mismatches == 0)
-        printf("All values match! ✅\n");
-    else
-        printf("Total mismatches = %d ❌\n", mismatches);
+   
+
+    vectorMultiply<<<height+4-1/4, 4>>>(
+        d_W, d_x, d_out,
+        height, width
+    );
+
+    cudaMemcpy(h_out, d_out, 3 * sizeof(float), cudaMemcpyDeviceToHost);
+
+    // Print result
+    printf("GPU out: %f %f %f\n", h_out[0], h_out[1], h_out[2]);
+
 
     // for (int epoch=0; epoch<EPOCHS; epoch++) {
     //     // float loss;

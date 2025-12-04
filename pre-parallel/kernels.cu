@@ -30,7 +30,7 @@ __device__ void softmax(float *z, float *out, int len) {
 // __device__ long offset;
 
 __global__ void vectorMultiply(const float* W, const float* x, float* out, int height, int width) {
-    int row = (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x  + threadIdx.x;;
+    int row = blockIdx.x * blockDim.x  + threadIdx.x;;
     if (row >= height) return;
 
     float sum = 0.0f;
