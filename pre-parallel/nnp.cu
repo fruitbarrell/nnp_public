@@ -123,11 +123,10 @@ void train_model(MODEL* model){
 
     // float *d_losses;
     // cudaMalloc(&d_losses,sizeof(float)*NUM_TRAIN);
-    // printf("This line does it");
-    // float* label_0 = train_label_flat + 0 * CLASSES;
-    // printf("This line does it");
-    // printf("%s \n",label_0[1]==train_data[0][1]);
-    // printf("This line does not it");
+
+    float* label_0 = train_label_flat + 0 * CLASSES;
+    printf("%s \n",(label_0[1] == train_data[0][1]) ? "true" : "false");
+
 
     // for (int epoch=0; epoch<EPOCHS; epoch++) {
     //     // float loss;
