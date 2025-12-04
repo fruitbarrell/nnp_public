@@ -8,6 +8,8 @@ const int H1 = 4;
 const int H2 = 3;
 const int CLASSES = 2;
 
+__device__ float drelu(float y) { return y > 0 ? 1 : 0; }
+
 
 __global__ void delta3(float* label,float* outa,float* delta3_out){
     int thx=blockIdx.x*blockDim.x+threadIdx.x;
@@ -31,7 +33,7 @@ __global__ void delta1(float* W2,float* delta2,float* h1a,float* delta1_out){
     delta1_out[thx]=err*drelu(h1a[thx]);
 }
 
-{
+
     printf("\n=== DELTA TEST ===\n");
 
     const int H1 = 4;
@@ -111,4 +113,3 @@ __global__ void delta1(float* W2,float* delta2,float* h1a,float* delta1_out){
     cudaFree(d_d1);
 
     printf("=== END DELTA TEST ===\n\n");
-}
