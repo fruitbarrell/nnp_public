@@ -46,13 +46,13 @@
 // *   out: output array to store softmax results
 // *   len: length of the input/output arrays
 // */ 
-// void softmax(float *z, float *out, int len) {
-//     float max = z[0];
-//     for (int i=1;i<len;i++) if (z[i]>max) max=z[i];
-//     float sum=0;
-//     for (int i=0;i<len;i++){ out[i]=expf(z[i]-max); sum+=out[i]; }
-//     for (int i=0;i<len;i++) out[i]/=sum;
-// }
+void softmax(float *z, float *out, int len) {
+    float max = z[0];
+    for (int i=1;i<len;i++) if (z[i]>max) max=z[i];
+    float sum=0;
+    for (int i=0;i<len;i++){ out[i]=expf(z[i]-max); sum+=out[i]; }
+    for (int i=0;i<len;i++) out[i]/=sum;
+}
 
 /* Initialize weights with small random values
 * Arguments:
