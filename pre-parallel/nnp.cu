@@ -171,17 +171,32 @@ void train_model(MODEL* model){
 
                 // // ---------- Update ----------
                 //Update W3 and bias 3
-                updateWeight(CLASSES,d_W3,d_delta3,d_h2a,H2);
-                updateBias(d_b3,d_delta3,CLASSES);
+                updateWeight<<<H2blocks,BLOCKSIZE>>>(CLASSES,d_W3,d_delta3,d_h2a,H2);
+                updateBias<<<CLASSESblocks,BLOCKSIZE>>>(d_b3,d_delta3,CLASSES);
 
                 //Update W2 and bias 2
-                updateWeight(H2,d_W2,d_delta2,d_h1a,H1);
-                updateBias(d_b2,d_delta2,H2);
+                updateWeight<<<H1blocks,BLOCKSIZE>>>(H2,d_W2,d_delta2,d_h1a,H1);
+                updateBias<<<H2blocks,BLOCKSIZE>>>(d_b2,d_delta2,H2);
 
                 //Update W1 and bias 1
                 float* d_sample_n = d_train_data + n * SIZE;
-                updateWeight(H1,d_W1,d_delta1,d_sample_n,SIZE);
-                updateBias(d_b1,d_delta1,H1);
+                updateWeight<<<(SIZE+BLOCKSIZE-1)/BLOCKSIZE,BLOCKSIZE>>>(H1,d_W1,d_delta1,d_sample_n,SIZE);
+                updateBias<<<H1blocks,BLOCKSIZE>>>(d_b1,d_delta1,H1);
+
+                // for (int j=0;j<H2;j++)
+                //     for (int k=0;k<CLASSES;k++)
+                //         W3[j*CLASSES+k]+=LR*delta3[k]*h2a[j];
+                // for (int k=0;k<CLASSES;k++) b3[k]+=LR*delta3[k];
+
+                // for (int j=0;j<H1;j++)
+                //     for (int k=0;k<H2;k++)
+                //         W2[j*H2+k]+=LR*delta2[k]*h1a[j];
+                // for (int k=0;k<H2;k++) b2[k]+=LR*delta2[k];
+
+                // for (int i=0;i<SIZE;i++)
+                //     for (int j=0;j<H1;j++)
+                //         W1[i*H1+j]+=LR*delta1[j]*train_data[n*SIZE+i];
+                // for (int j=0;j<H1;j++) b1[j]+=LR*delta1[j];
            
         }
         cudaMemcpy(&h_loss, d_loss, sizeof(float), cudaMemcpyDeviceToHost);
