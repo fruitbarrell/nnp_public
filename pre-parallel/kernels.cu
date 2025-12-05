@@ -69,7 +69,7 @@ __global__ void delta1(float* W2,float* delta2,float* h1a,float* delta1_out){
 __global__ void updateWeight(int klen,float* W,float* delta,float* layera,int layerlen){
     int thx=blockIdx.x*blockDim.x+threadIdx.x;
     if(thx >= layerlen) return;
-    for(int k=0;k<klen;k++) W[k*layerlen+thx]+=LR*delta[k]*layera[thx];
+    for(int k=0;k<klen;k++) W[thx*klen+k]+=LR*delta[k]*layera[thx];
 }
 
 __global__ void updateBias(float* b,float*delta,int layerlen){
@@ -85,7 +85,7 @@ __global__ void vectorMultiply(const float* W, const float* x, float* out, int h
 
     float sum = 0.0f;
     for (int col = 0; col < width; col++)
-        sum += W[row * width + col] * x[col];
+        sum += W[col * height + row] * x[col];
 
     out[row] = sum;
 }
