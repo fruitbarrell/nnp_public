@@ -1,5 +1,5 @@
 CC=gcc
-#CFLAGS=-g
+CFLAGS=-std=c99
 CFLAGS=
 
 nnp:loader.o nnp.o main.o
