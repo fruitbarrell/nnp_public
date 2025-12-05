@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS=-std=c99
-CFLAGS=
+
 
 nnp:loader.o nnp.o main.o
 	$(CC) $(CFLAGS) nnp.o loader.o main.o -o nnp -lm
